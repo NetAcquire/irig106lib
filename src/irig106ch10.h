@@ -204,6 +204,13 @@ typedef enum SortStatus
     enSortError  = 2,
     } EnSortStatus;
 
+#define RESIZE_BUFFER(pvBuffer, ulBufferSize, ulPacketLen)              \
+        if (ulBufferSize < ulPacketLen)                                 \
+            {                                                           \
+            pvBuffer = (unsigned char *)realloc(pvBuffer, ulPacketLen); \
+            assert(pvBuffer != NULL);                                   \
+            ulBufferSize = ulPacketLen;                                 \
+            }
 
 /*
  * Data structures
@@ -228,9 +235,16 @@ typedef PUBLIC struct SuI106Ch10Header_S
     uint8_t       ubyDataType;          ///< Data type
     uint8_t       aubyRefTime[6];       ///< Reference time
     uint16_t      uChecksum;            ///< Header Checksum
-    uint8_t       abyTime[8];           ///< Time (start secondary header)
-    uint16_t      uReserved;            //
-    uint16_t      uSecChecksum;         ///< Secondary Header Checksum
+    union
+        {
+        struct
+            {
+            uint8_t       abyTime[8];   ///< Time (start secondary header)
+            uint16_t      uReserved;    //
+            uint16_t      uSecChecksum; ///< Secondary Header Checksum
+            };
+        uint8_t       abySecHdr[12];    ///< Secondary Header
+        };
 #if !defined(__GNUC__)
     } SuI106Ch10Header;
 #else
